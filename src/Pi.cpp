@@ -914,6 +914,9 @@ void GameLoop::Start()
 	// If we have a tombstone loop, we will SetNextLifecycle() so it runs before
 	// we jump back to the main menu
 	Pi::GetApp()->QueueLifecycle(Pi::GetApp()->m_mainMenu);
+	
+	//We also delete tombstone loop to not show it if player isn't dead
+	RemoveNextLifecycle();
 
 	profile_startup_ms = Clamp(Pi::config->Int("ProfileStartupMs", 0), 0, 10000);
 	startup_ticks = SDL_GetTicks();
@@ -976,16 +979,18 @@ void GameLoop::Update(float deltaTime)
 	// did the player die?
 	if (Pi::game->GetPlayer()->IsDead()) {
 		// FIXME: this is NOT Pi's concern at all! At the very minimum, this should go in Game.cpp
+		bool hasInput = Pi::input->MouseButtonState(SDL_BUTTON_LEFT) || Pi::input->MouseButtonState(SDL_BUTTON_RIGHT) || Pi::input->KeyState(SDLK_SPACE);
 		if (!(time_player_died > 0.0)) {
 			Pi::game->SetTimeAccel(Game::TIMEACCEL_1X);
 			Pi::game->GetDeathView()->Init();
 			Pi::SetView(Pi::game->GetDeathView());
 			time_player_died = Pi::game->GetTime();
-		} else if (Pi::game->GetTime() - time_player_died > 8.0) {
+		} else if (Pi::game->GetTime() - time_player_died > 8.0 || hasInput) {
 			// This also shouldn't go here, though we should evaluate to what degree
 			// Pi.cpp is involved in queuing the tombstone loop.
 			SetNextLifecycle(RefCountedPtr<TombstoneLoop>(new TombstoneLoop()));
 			RequestEndLifecycle();
+			return;
 		}
 	}
 

@@ -46,6 +46,18 @@ public:
 		{
 			m_nextLifecycle = l;
 		}
+		
+		// Remove next lifesycle that should begin immediately after this lifecycle has finished execution
+		void RemoveNextLifecycle()
+		{
+			if (m_nextLifecycle.Valid())
+			{
+				if (m_nextLifecycle.Unique())
+				{
+					m_nextLifecycle.Reset();
+				}
+			}
+		}
 
 		bool GetProfilerAccumulate() const { return m_profilerAccumulate; }
 
